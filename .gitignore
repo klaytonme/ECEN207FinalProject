@@ -1,0 +1,48 @@
+# Arduino build artifacts
+*.elf
+*.hex
+*.bin
+*.eep
+*.lst
+*.map
+*.su
+*.srec
+*.sym
+*.d
+
+# Arduino IDE specific files
+*.ino.hex
+*.ino.elf
+*.ino.bin
+*.ino.eep
+*.ino.lst
+*.ino.map
+*.ino.su
+*.ino.srec
+*.ino.sym
+*.ino.d
+*.ino.old
+
+# Temporary files and directories
+.vscode/
+.build/
+.pio/
+.tmp/
+build/
+debug/
+release/
+temp/
+upload/
+*.log
+*.bak
+*~
+*.swp
+.DS_Store # macOS specific
+Thumbs.db # Windows specific
+
+# Libraries and core files (if managed separately)
+# If you are managing libraries and cores through a package manager or submodule,
+# you might want to ignore these directories.
+# For example, if using PlatformIO:
+.pio/libdeps/
+.pio/packages/
