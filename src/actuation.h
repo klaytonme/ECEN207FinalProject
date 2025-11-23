@@ -23,6 +23,7 @@ typedef struct {
 enum { LIFT_DIR_UP = 1, LIFT_DIR_DOWN = -1 };
 
 
+int initActuationPins(void);
 int liftSet(LiftServoState);
 int tiltSet(TiltServoState);
 

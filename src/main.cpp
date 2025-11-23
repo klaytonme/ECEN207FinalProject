@@ -29,6 +29,9 @@ int	 tiltTo(int, int);
 // ============ MAIN ============
 
 void setup() {
+	initSensingPins();
+	initActuationPins();
+
 	next_state	  = reset_state();
 	current_state = next_state;
 

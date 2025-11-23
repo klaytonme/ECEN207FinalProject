@@ -18,6 +18,7 @@ typedef struct {
 
 
 
+int			initSensingPins(void);
 SwitchState readLimits();
 JoyState	readJoy();
 
