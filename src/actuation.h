@@ -2,10 +2,12 @@
 #define ACTUATION_H
 
 
-const int tilt_max	 = 200;
-const int tilt_speed = 50000; // in 1/us
-const int lift_diff	 = 200;
-const int lift_speed = 50000; // in 1/us
+const int tilt_max		  = 200;
+const int tilt_speed	  = 50000;	// in 1/us
+const int tilt_fast_TO	  = 500000; // in us
+const int lift_up_speed	  = 2;		// in PWM
+const int lift_up_time	  = 5000000 / lift_up_speed;
+const int lift_down_speed = 2; // in PWM
 
 typedef struct {
 	int nw;
@@ -18,7 +20,7 @@ typedef struct {
 	int y;
 } TiltServoState;
 
-LiftServoState lift_up;
+enum { LIFT_DIR_UP = 1, LIFT_DIR_DOWN = -1 };
 
 
 int liftSet(LiftServoState);
