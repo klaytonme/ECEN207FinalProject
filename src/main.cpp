@@ -11,7 +11,7 @@ SwitchState	   limit_state;
 JoyState	   joy_state;
 LiftServoState lift_top;
 LiftServoState lift_state;
-TiltServoState tilt_state;
+TiltController TiltCont;
 
 
 time_t current_time, state_start, prev_loop;
@@ -21,28 +21,29 @@ int updateState();
 
 int	 liftMove(int, int = 0);
 bool liftIsDown();
-bool tiltInc(time_t, int, int);
-int	 tiltTo(int, int);
 
 
 
 // ============ MAIN ============
 
 void setup() {
+	Serial.begin(9600);
+	Serial.println("Ran!");
+
 	initSensingPins();
 	initActuationPins();
 
-	next_state	  = reset_state();
+	next_state	  = init_state();
 	current_state = next_state;
 
 
-	current_time = millis();
+	current_time = micros();
 	state_start	 = current_time;
 }
 
 void loop() {
 	prev_loop	 = current_time;
-	current_time = millis();
+	current_time = micros();
 
 	updateState();
 }
@@ -62,7 +63,7 @@ int updateState() {
 
 				if (current_time < state_start + lift_up_time)
 					break;
-
+				Serial.println("Down");
 				next_state.init |= InitFlags::UP;
 			}
 			if ((current_state.init & InitFlags::DOWN) == InitFlags::NONE) {
@@ -71,100 +72,132 @@ int updateState() {
 				if (!liftIsDown())
 					break;
 
+				Serial.println("North");
 				next_state.init |= InitFlags::DOWN;
+
+				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(0, tilt_max), TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::N) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, 0, tilt_max))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
+				Serial.println("South");
 				next_state.init |= InitFlags::N;
+
+				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(0, -tilt_max), TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::S) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, 0, -tilt_max))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
+				Serial.println("Center");
 				next_state.init |= InitFlags::S;
+
+				state_start = current_time;
+				TiltCont.center(TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::CENTER1) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, 0, 0))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
+				Serial.println("West");
 				next_state.init |= InitFlags::CENTER1;
+
+				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(-tilt_max, 0), TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::W) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, -tilt_max, 0))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
+				Serial.println("East");
 				next_state.init |= InitFlags::W;
+
+				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(tilt_max, 0), TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::E) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, tilt_max, 0))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
+				Serial.println("Center");
 				next_state.init |= InitFlags::E;
+
+				state_start = current_time;
+				TiltCont.center(TILTSPEED_SLOW);
 			}
 			if ((current_state.init & InitFlags::CENTER2) == InitFlags::NONE) {
-				if (!tiltInc(current_time - prev_loop, 0, 0))
+				if (!TiltCont.updateTraj(current_time - state_start))
 					break;
 
-				next_state.init |= InitFlags::N;
+				Serial.println("North Fast");
+				next_state.init |= InitFlags::CENTER2;
+
 				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(0, tilt_max), TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::NFAST) == InitFlags::NONE) {
-				tiltTo(0, tilt_max);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("South Fast");
 				next_state.init |= InitFlags::NFAST;
+
 				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(0, -tilt_max), TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::SFAST) == InitFlags::NONE) {
-				tiltTo(0, -tilt_max);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("Center");
 				next_state.init |= InitFlags::SFAST;
+
 				state_start = current_time;
+				TiltCont.center(TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::CENTER3) == InitFlags::NONE) {
-				tiltTo(0, 0);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("West Fast");
 				next_state.init |= InitFlags::CENTER3;
+
 				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(-tilt_max, 0), TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::WFAST) == InitFlags::NONE) {
-				tiltTo(-tilt_max, 0);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("East Fast");
 				next_state.init |= InitFlags::WFAST;
+
 				state_start = current_time;
+				TiltCont.setTraj(TiltServoState(tilt_max, 0), TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::EFAST) == InitFlags::NONE) {
-				tiltTo(tilt_max, 0);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("Center");
 				next_state.init |= InitFlags::EFAST;
+
 				state_start = current_time;
+				TiltCont.center(TILTSPEED_IMMEDIATE);
 			}
 			if ((current_state.init & InitFlags::CENTER4) == InitFlags::NONE) {
-				tiltTo(0, 0);
-
-				if (current_time < state_start + tilt_fast_TO)
+				if (current_time < state_start + tilt_speed_immediate_TO)
 					break;
 
+				Serial.println("Display");
 				next_state.init |= InitFlags::CENTER4;
 				state_start = current_time;
 			}
 			if ((current_state.init & InitFlags::DISP) == InitFlags::NONE) {
+				Serial.println("Button");
 				current_state.init |= InitFlags::DISP;
 			}
 			if ((current_state.init & InitFlags::BUTTON) == InitFlags::NONE) {
@@ -202,11 +235,12 @@ int updateState() {
 
 					next_state.reset_stage = ResetStage::TILT;
 					state_start			   = current_time;
+					TiltCont.setTraj(TiltServoState(-tilt_max, -tilt_max), TILTSPEED_FAST);
 
 					break;
 
 				case ResetStage::TILT:
-					if (!tiltInc(current_time - prev_loop, -tilt_max, -tilt_max))
+					if (!TiltCont.updateTraj(current_time - state_start))
 						break;
 
 					if (current_time < state_start + resetTiltTimeout)
@@ -225,11 +259,12 @@ int updateState() {
 
 					next_state.reset_stage = ResetStage::TILT;
 					state_start			   = current_time;
+					TiltCont.center(TILTSPEED_FAST);
 
 					break;
 
 				case ResetStage::CENTER:
-					if (!tiltInc(current_time - prev_loop, 0, 0))
+					if (!TiltCont.updateTraj(current_time - state_start))
 						break;
 
 					next_state.state = State::IDLE;
@@ -277,39 +312,4 @@ bool liftIsDown() {
 	limit_state = readLimits();
 
 	return limit_state.nw && limit_state.ne && limit_state.se;
-}
-
-
-bool tiltInc(time_t time_elapsed, int x_targ, int y_targ) {
-	bool completed = true;
-
-	int inc = (time_elapsed / tilt_speed);
-
-	int e_x = x_targ - tilt_state.x;
-	int e_y = y_targ - tilt_state.y;
-
-	if (abs(e_x) < inc)
-		tilt_state.x = x_targ;
-	else {
-		tilt_state.x += inc * (e_x > 0);
-		completed = false;
-	}
-
-	if (abs(e_y) < inc)
-		tilt_state.y = y_targ;
-	else {
-		tilt_state.y += inc * (e_y > 0);
-		completed = false;
-	}
-
-	tiltSet(tilt_state);
-
-	return completed;
-}
-
-int tiltTo(int x_targ, int y_targ) {
-	tilt_state.x = x_targ;
-	tilt_state.y = y_targ;
-
-	tiltSet(tilt_state);
 }

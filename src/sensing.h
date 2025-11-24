@@ -19,7 +19,9 @@ typedef struct {
 
 
 int			initSensingPins(void);
-SwitchState readLimits();
-JoyState	readJoy();
+SwitchState readLimits(void);
+JoyState	readJoy(void);
+bool		buttonIsPressed(void);
+bool		buttonWasPressed(void);
 
 #endif
