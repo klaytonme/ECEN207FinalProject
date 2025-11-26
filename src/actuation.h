@@ -25,35 +25,66 @@ typedef struct TiltServoState {
 
 class TiltController {
   private:
-	TiltServoState orig;
-	TiltServoState state;
-	TiltServoState targ;
+	TiltServoState orig_;
+	TiltServoState state_;
+	TiltServoState targ_;
 	time_t		   duration;
+
+	const int PIN_X;
+	const int PIN_Y;
 
 	int tiltUpdate();
 
   public:
-	TiltController();
+	TiltController(int, int);
 
+	void		   initPins(void);
 	TiltServoState getPosition(void);
 	void		   setTraj(TiltServoState, int = TILTSPEED_IMMEDIATE);
 	int			   updateTraj(time_t);
-	int			   tiltSet(TiltServoState);
+	int			   set(TiltServoState);
 	void		   center(int = TILTSPEED_IMMEDIATE);
 };
 
-typedef struct {
-	int nw;
-	int ne;
-	int se;
-} LiftServoState;
+
 
 enum { LIFT_DIR_UP = 1, LIFT_DIR_DOWN = -1 };
 
+typedef struct LiftServoState {
+	int nw;
+	int ne;
+	int se;
+	LiftServoState() {
+		nw = 0;
+		ne = 0;
+		se = 0;
+	};
+	LiftServoState(int nw_in, int ne_in, int se_in) {
+		nw = nw_in;
+		ne = ne_in;
+		se = se_in;
+	}
+};
 
-int initActuationPins(void);
-int liftSet(LiftServoState);
-int tiltSet(TiltServoState);
+
+struct LimitState;
+
+class LiftController {
+  private:
+	const int	   kPinNW_;
+	const int	   kPinNE_;
+	const int	   kPinSE_;
+	LiftServoState state_;
+
+	void update();
+
+  public:
+	LiftController(int, int, int);
+	void initPins(void);
+	void set(LiftServoState);
+	void raise(int = lift_up_speed);
+	void lower(LimitState, int = lift_down_speed);
+};
 
 
 #endif
