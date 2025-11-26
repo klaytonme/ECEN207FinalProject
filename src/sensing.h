@@ -36,7 +36,18 @@ class LimitController {
 class UIController {
   public:
 	UIController(int, int, int, int, int, int);
-	void initPins(void);
+
+	void	 initPins(void);
+	JoyState readJoy(void);
+	bool	 buttonIsPressed(void);
+	bool	 buttonWasPressed(void);
+	bool	 joyButtonIsPressed(void);
+	bool	 joyButtonWasPressed(void);
+
+	void buttonInterrupt(void);
+	void joyButtonInterrupt(void);
+
+	static UIController* instance;
 
   private:
 	const int kPinButton_;
@@ -45,14 +56,10 @@ class UIController {
 	const int kPinJoyButton_;
 	const int kPinCoin_;
 	const int kPinWin_;
+
+	volatile bool buttonFlag_;
+	volatile bool joyButtonFlag_;
 };
 
-
-
-int		   initSensingPins(void);
-LimitState readLimits(void);
-JoyState   readJoy(void);
-bool	   buttonIsPressed(void);
-bool	   buttonWasPressed(void);
 
 #endif

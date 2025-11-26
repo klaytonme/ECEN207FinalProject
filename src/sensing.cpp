@@ -2,19 +2,10 @@
 
 #include "sensing.h"
 
-#define LIMIT1PIN 1
-#define LIMIT2PIN 2
-#define LIMIT3PIN 3
-#define JOYXPIN	  A0
-#define JOYYPIN	  A1
-#define JOYBUTPIN 5
-#define BUTTONPIN 4
+void buttonISR();
+void joyButtonISR();
 
-volatile bool buttonPressed	   = false;
-volatile bool joyButtonPressed = false;
-
-void buttonInterrupt();
-void joyButtonInterrupt();
+UIController* UIController::instance = nullptr;
 
 
 LimitController::LimitController(int NELimitPin, int NWLimitPin, int SELimitPin)
@@ -47,46 +38,68 @@ UIController::UIController(int ButtonPin, int JoyXPin, int JoyYPin, int JoyButto
 	  kPinWin_(WinPin) {}
 
 void UIController::initPins() {
-	pinMode(JOYBUTPIN, INPUT_PULLUP);
-	pinMode(BUTTONPIN, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(JOYBUTPIN), joyButtonInterrupt, FALLING);
-	attachInterrupt(digitalPinToInterrupt(BUTTONPIN), buttonInterrupt, FALLING);
-}
+	instance = this;
 
+	pinMode(kPinButton_, INPUT_PULLUP);
+	pinMode(kPinJoyButton_, INPUT_PULLUP);
 
-int initSensingPins() {
-	pinMode(LIMIT1PIN, INPUT_PULLUP);
-	pinMode(LIMIT2PIN, INPUT_PULLUP);
-	pinMode(LIMIT3PIN, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(kPinButton_), buttonISR, FALLING);
+	attachInterrupt(digitalPinToInterrupt(kPinJoyButton_), joyButtonISR, FALLING);
 }
 
 
 
-JoyState readJoy() {
+JoyState UIController::readJoy() {
 	JoyState state;
-	state.x = analogRead(JOYXPIN);
-	state.y = analogRead(JOYYPIN);
+	state.x = analogRead(kPinJoyX_);
+	state.y = analogRead(kPinJoyY_);
 
 	return state;
 }
 
-bool buttonIsPressed() {
-	return digitalRead(BUTTONPIN);
+bool UIController::buttonIsPressed() {
+	return !digitalRead(kPinButton_);
 }
 
-bool buttonWasPressed() {
+bool UIController::joyButtonIsPressed() {
+	return !digitalRead(kPinJoyButton_);
+}
+
+bool UIController::buttonWasPressed() {
 	__disable_irq;
-	bool tempButtonState = buttonPressed;
-	buttonPressed		 = false;
+	bool tempButtonState = buttonFlag_;
+	buttonFlag_			 = false;
 	__enable_irq;
 
 	return tempButtonState;
 }
 
-void buttonInterrupt() {
-	buttonPressed = true;
+bool UIController::joyButtonWasPressed() {
+	__disable_irq;
+	bool tempButtonState = joyButtonFlag_;
+	joyButtonFlag_		 = false;
+	__enable_irq;
+
+	return tempButtonState;
 }
 
-void joyButtonInterrupt() {
-	joyButtonPressed = true;
+void UIController::buttonInterrupt() {
+	buttonFlag_ = true;
+}
+
+void UIController::joyButtonInterrupt() {
+	joyButtonFlag_ = true;
+}
+
+
+void buttonISR() {
+	if (UIController::instance) {
+		UIController::instance->buttonInterrupt();
+	}
+}
+
+void joyButtonISR() {
+	if (UIController::instance) {
+		UIController::instance->joyButtonInterrupt();
+	}
 }
