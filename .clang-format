@@ -43,8 +43,8 @@ PointerAlignment: Left # Options: Left, Right, Middle
 ReferenceAlignment: Pointer
 
 # -------- LINE BREAKING --------
-AllowShortFunctionsOnASingleLine: Empty # Options: None, Inline, InlineOnly, Empty, All
-AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: All # Options: None, Inline, InlineOnly, Empty, All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLoopsOnASingleLine: false
 
 # -------- INCLUDES --------

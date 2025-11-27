@@ -3,72 +3,10 @@
 
 #include "state.h"
 
-// enum class InitFlags : unsigned int {
-// 	NONE   = 0,
-// 	UP	   = 1 << 0,
-// 	DOWN   = 1 << 1,
-// 	N	   = 1 << 2,
-// 	S	   = 1 << 3,
-// 	W	   = 1 << 5,
-// 	E	   = 1 << 6,
-// 	CENTER = 1 << 4,
-// 	JOY	   = 1 << 7,
-// 	CALIB  = 1 << 8,
-// 	BUTTON = 1 << 9,
-// 	DISP   = 1 << 10,
-// 	ALL	   = 0xFFFFFFFF
-// };
 
-// #define ENABLE_BITMASK_OPERATORS(x) \
-// 	inline constexpr x operator|(x a, x b) {                                                                           \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return static_cast<x>(static_cast<T>(a) | static_cast<T>(b));                                                  \
-// 	}                                                                                                                  \
-// 	inline constexpr x operator&(x a, x b) {                                                                           \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return static_cast<x>(static_cast<T>(a) & static_cast<T>(b));                                                  \
-// 	}                                                                                                                  \
-// 	inline constexpr x operator^(x a, x b) {                                                                           \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return static_cast<x>(static_cast<T>(a) ^ static_cast<T>(b));                                                  \
-// 	}                                                                                                                  \
-// 	inline constexpr x operator~(x a) {                                                                                \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return static_cast<x>(~static_cast<T>(a));                                                                     \
-// 	}                                                                                                                  \
-// 	inline x& operator|=(x& a, x b) {                                                                                  \
-// 		return a = a | b;                                                                                              \
-// 	}                                                                                                                  \
-// 	inline x& operator&=(x& a, x b) {                                                                                  \
-// 		return a = a & b;                                                                                              \
-// 	}                                                                                                                  \
-// 	inline x& operator^=(x& a, x b) {                                                                                  \
-// 		return a = a ^ b;                                                                                              \
-// 	}                                                                                                                  \
-// 	inline constexpr bool any(x a) {                                                                                   \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return static_cast<T>(a) != 0;                                                                                 \
-// 	}                                                                                                                  \
-// 	inline constexpr bool all(x value, x flags) {                                                                      \
-// 		using T = std::underlying_type_t<x>;                                                                           \
-// 		return (static_cast<T>(value) & static_cast<T>(flags)) == static_cast<T>(flags);                               \
-// 	}
+const int displayInitTO = 50000;
 
-// ENABLE_BITMASK_OPERATORS(InitFlags)
-
-// class InitSubState : public State {
-//   public:
-// 	void enter() override;
-// 	void update() override;
-// 	void exit() override;
-
-// 	void setParentState(State*);
-
-//   public:
-// 	State* parentState;
-// };
-
-class InitSubState;
+class IS;
 
 class InitState : public State {
   public:
@@ -76,17 +14,16 @@ class InitState : public State {
 	void update() override;
 	void exit() override;
 
-	void transitionTo(InitSubState*);
+	void transitionTo(IS*);
 
   private:
-	InitSubState* substate_;
-	// InitFlags init_;
+	IS* substate_;
 };
 
 
-class InitSubState : public State {
+class IS : public State {
   public:
-	virtual ~InitSubState() {}
+	virtual ~IS() {}
 
 	virtual void enter() override {};
 	virtual void update() override {};
@@ -99,17 +36,57 @@ class InitSubState : public State {
 
   public:
 	InitState* parent_;
-	Context*   ctx_;
 };
 
 
-class InitSubstateButton : public InitSubState {
+enum { INIT, TEST };
+enum { X, Y };
+
+class IS_Button : public IS {
 	void enter();
 };
-class InitSubstateTestLift : public InitSubState {
+
+class IS_Disp : public IS {
+  public:
+	IS_Disp(int test) : kTest_(test) {}
+	void enter();
+	void update();
+
+  private:
+	const int kTest_;
+	const int kLoopPeriod_ = displayInitTO;
+	int		  loop_start_;
+	int		  stage_;
+};
+
+class IS_JoyInit : public IS {
+	void enter();
+};
+class IS_JoyTest : public IS {
+  public:
+	void enter();
+	void update();
+
+  private:
+	int testJoy(int);
+
+	bool dir_;
+};
+
+class IS_LiftTest : public IS {
+	// void enter();
 	void update();
 };
-class InitSubstateInitLift : public InitSubState {
+class IS_LiftInitUp : public IS {
+	void enter();
+	void update();
+};
+class IS_LiftInitDown : public IS {
+	void enter();
+	void update();
+};
+
+class IS_TiltInit : public IS {
 	void update();
 };
 

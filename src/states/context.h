@@ -1,9 +1,12 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#include "actuation.h"
-#include "sensing.h"
-#include "state.h"
+class State;
+class TiltController;
+class LiftController;
+class LimitController;
+class UIController;
+class DisplayController;
 
 class Context {
   private:
@@ -11,19 +14,21 @@ class Context {
 
 
   public:
-	Context(State*, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
+	Context(State*, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 	~Context() = default;
 
-	void transitionTo(State*);
-	void update(void);
+	void		  transitionTo(State*);
+	void		  update(void);
+	unsigned long t(void);
 
 
-	TiltController	Tilt_;
-	LiftController	Lift_;
-	LimitController Limit_;
-	UIController	UI_;
+	TiltController*	   Tilt_;
+	LiftController*	   Lift_;
+	LimitController*   Limit_;
+	UIController*	   UI_;
+	DisplayController* Disp_;
 
-	time_t current_time_;
+	unsigned long current_time_;
 };
 
 #endif

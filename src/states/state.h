@@ -5,15 +5,15 @@ class Context;
 
 class State {
   protected:
-	Context*  ctx_;
-	long long state_start_;
+	Context*	  ctx_;
+	unsigned long state_start_;
 
   public:
 	virtual ~State() = default;
 
-	void setContext(Context* ctx) {
-		ctx_ = ctx;
-	}
+	void		  setContext(Context*);
+	void		  setStateStart(unsigned long);
+	unsigned long t(void);
 
 	virtual void enter(void)  = 0;
 	virtual void update(void) = 0;

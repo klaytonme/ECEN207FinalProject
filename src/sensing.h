@@ -14,6 +14,14 @@ typedef struct LimitState {
 typedef struct JoyState {
 	int x;
 	int y;
+	JoyState() {
+		x = 0;
+		y = 0;
+	};
+	JoyState(int x_in, int y_in) {
+		x = x_in;
+		y = y_in;
+	};
 };
 
 
@@ -37,17 +45,24 @@ class UIController {
   public:
 	UIController(int, int, int, int, int, int);
 
-	void	 initPins(void);
+	void initPins(void);
+	void joyCalib(void);
+
 	JoyState readJoy(void);
 	bool	 buttonIsPressed(void);
-	bool	 buttonWasPressed(void);
 	bool	 joyButtonIsPressed(void);
-	bool	 joyButtonWasPressed(void);
 
+	bool buttonWasPressed(void);
+	bool joyButtonWasPressed(void);
 	void buttonInterrupt(void);
 	void joyButtonInterrupt(void);
+	void resetButtonInterrupt(void);
+	void resetJoyButtonInterrupt(void);
 
 	static UIController* instance;
+
+	const int kJoyMax_ = 1024;
+
 
   private:
 	const int kPinButton_;
@@ -57,8 +72,12 @@ class UIController {
 	const int kPinCoin_;
 	const int kPinWin_;
 
+
 	volatile bool buttonFlag_;
 	volatile bool joyButtonFlag_;
+
+	JoyState state_;
+	JoyState calib_;
 };
 
 
