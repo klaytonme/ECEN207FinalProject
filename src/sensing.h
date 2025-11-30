@@ -2,13 +2,23 @@
 #define SENSING_H
 
 
-#define JOYMAX 512
+const int kJoyMax = 512;
 
 
 typedef struct LimitState {
 	bool nw;
 	bool ne;
 	bool se;
+	LimitState() {
+		nw = 0;
+		ne = 0;
+		se = 0;
+	};
+	LimitState(bool nw_in, bool ne_in, bool se_in) {
+		nw = nw_in;
+		ne = ne_in;
+		se = se_in;
+	};
 };
 
 typedef struct JoyState {
@@ -59,9 +69,10 @@ class UIController {
 	void resetButtonInterrupt(void);
 	void resetJoyButtonInterrupt(void);
 
-	static UIController* instance;
+	bool coinIsThere(void);
+	bool winIsThere(void);
 
-	const int kJoyMax_ = 1024;
+	static UIController* instance;
 
 
   private:
@@ -72,9 +83,13 @@ class UIController {
 	const int kPinCoin_;
 	const int kPinWin_;
 
+	const int kButtonInterruptTO_ = 500000;
 
-	volatile bool buttonFlag_;
-	volatile bool joyButtonFlag_;
+
+	volatile bool		   buttonFlag_;
+	volatile unsigned long buttonFlagTime_;
+	volatile bool		   joyButtonFlag_;
+	volatile unsigned long joyButtonFlagTime_;
 
 	JoyState state_;
 	JoyState calib_;

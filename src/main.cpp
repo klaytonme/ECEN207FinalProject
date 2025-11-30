@@ -5,9 +5,9 @@
 #include "states/context.h"
 
 
-#define LIFTSERVONWPIN 9
-#define LIFTSERVONEPIN 10
-#define LIFTSERVOSEPIN 11
+#define LIFTSERVONWPIN 8
+#define LIFTSERVONEPIN 9
+#define LIFTSERVOSEPIN 10
 #define TILTSERVOXPIN  5
 #define TILTSERVOYPIN  6
 

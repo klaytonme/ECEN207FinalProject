@@ -1,14 +1,20 @@
 #ifndef ACTUATION_H
 #define ACTUATION_H
 
+#include "sensing.h"
 
-const int tilt_max				  = 200;
-const int lift_up_speed			  = 2; // in PWM
-const int lift_up_time			  = 5000000 / lift_up_speed;
-const int lift_down_speed		  = 2; // in PWM
-const int tilt_speed_immediate_TO = 500000;
+const int tilt_max = 200;
 
-enum { TILTSPEED_SLOW = 10000, TILTSPEED_FAST = 5000, TILTSPEED_IMMEDIATE = 0 }; // in us/deg
+const int kLiftUpTime	= 2000000;
+const int kLiftMaxSpeed = 15;
+
+const int			tilt_speed_immediate_TO = 500000;
+const unsigned long kTiltInitTO				= 10000000;
+
+const int kTiltMin			= 570;
+const int kTiltMax			= 2320;
+const int kServoRefreshRate = 50000;
+
 
 typedef struct TiltServoState {
 	int x;
@@ -20,8 +26,11 @@ typedef struct TiltServoState {
 	TiltServoState(int x_in, int y_in) {
 		x = x_in;
 		y = y_in;
-	}
+	};
 };
+
+enum { TRAJ_DURATION, TRAJ_SPEED };
+enum { TILTSPEED_SLOW = 10000, TILTSPEED_FAST = 5000, TILTSPEED_IMMEDIATE = 0 }; // in us/deg
 
 class TiltController {
   private:
@@ -30,8 +39,12 @@ class TiltController {
 	TiltServoState targ_;
 	time_t		   duration;
 
-	const int PIN_X;
-	const int PIN_Y;
+	TiltServoState center_;
+	TiltServoState min_;
+	TiltServoState max_;
+
+	const int kPinX_;
+	const int kPinY_;
 
 	int tiltUpdate();
 
@@ -40,15 +53,25 @@ class TiltController {
 
 	void		   initPins(void);
 	TiltServoState getPosition(void);
-	void		   setTraj(TiltServoState, int = TILTSPEED_IMMEDIATE);
-	int			   updateTraj(time_t);
-	int			   set(TiltServoState);
-	void		   center(int = TILTSPEED_IMMEDIATE);
+
+	void		   updateCenter(void);
+	TiltServoState getCenter(void) { return center_; }
+	void		   toCenter(int = TRAJ_SPEED, int = TILTSPEED_IMMEDIATE);
+
+	void		   updateBounds(void);
+	TiltServoState getMin(void) { return min_; }
+	TiltServoState getMax(void) { return max_; }
+
+	void setTraj(TiltServoState, int = TRAJ_SPEED, int = TILTSPEED_IMMEDIATE);
+	int	 updateTraj(time_t);
+	int	 set(TiltServoState);
+
+	const int kInitListLength = 6;
 };
 
 
 
-enum { LIFT_DIR_UP = 1, LIFT_DIR_DOWN = -1 };
+enum { LIFT_DIR_DOWN = -1, LIFT_DIR_STOP = 0, LIFT_DIR_UP = 1 };
 
 typedef struct LiftServoState {
 	int nw;
@@ -66,9 +89,6 @@ typedef struct LiftServoState {
 	}
 };
 
-
-struct LimitState;
-
 class LiftController {
   private:
 	const int	   kPinNW_;
@@ -82,8 +102,10 @@ class LiftController {
 	LiftController(int, int, int);
 	void initPins(void);
 	void set(LiftServoState);
-	void raise(int = lift_up_speed);
-	void lower(LimitState, int = lift_down_speed);
+	void write(int = LIFT_DIR_UP, LimitState = LimitState(false, false, false));
+	void stop();
+
+	const int kLiftMax_ = kLiftMaxSpeed;
 };
 
 

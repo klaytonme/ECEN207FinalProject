@@ -18,9 +18,9 @@ void LimitController::initPins() {
 }
 
 LimitState LimitController::readLimits() {
-	state_.nw = digitalRead(kPinNW_);
-	state_.ne = digitalRead(kPinNE_);
-	state_.se = digitalRead(kPinSE_);
+	state_.nw = !digitalRead(kPinNW_);
+	state_.ne = !digitalRead(kPinNE_);
+	state_.se = !digitalRead(kPinSE_);
 
 	return state_;
 }
@@ -28,7 +28,7 @@ LimitState LimitController::readLimits() {
 bool LimitController::isDown() {
 	readLimits();
 
-	return (!state_.nw && !state_.ne && !state_.se);
+	return (state_.nw && state_.ne && state_.se);
 }
 
 
@@ -38,6 +38,9 @@ UIController::UIController(int ButtonPin, int JoyXPin, int JoyYPin, int JoyButto
 	  kPinWin_(WinPin) {
 	state_ = JoyState(0, 0);
 	calib_ = JoyState(0, 0);
+
+	buttonFlagTime_	   = 0;
+	joyButtonFlagTime_ = 0;
 }
 
 void UIController::initPins() {
@@ -59,8 +62,8 @@ void UIController::joyCalib() {
 
 
 JoyState UIController::readJoy() {
-	state_.x = analogRead(kPinJoyX_) - calib_.x;
-	state_.y = analogRead(kPinJoyY_) - calib_.y;
+	state_.x = -(analogRead(kPinJoyX_) - calib_.x);
+	state_.y = -(analogRead(kPinJoyY_) - calib_.y);
 
 	return state_;
 }
@@ -86,8 +89,20 @@ bool UIController::joyButtonWasPressed() {
 	return tempButtonState;
 }
 
-void UIController::buttonInterrupt() { buttonFlag_ = true; }
-void UIController::joyButtonInterrupt() { joyButtonFlag_ = true; }
+void UIController::buttonInterrupt() {
+	unsigned long time = micros();
+	if (time < buttonFlagTime_ + kButtonInterruptTO_) return;
+
+	buttonFlag_		= true;
+	buttonFlagTime_ = time;
+}
+void UIController::joyButtonInterrupt() {
+	unsigned long time = micros();
+	if (time < joyButtonFlagTime_ + kButtonInterruptTO_) return;
+
+	joyButtonFlag_	   = true;
+	joyButtonFlagTime_ = time;
+}
 
 void UIController::resetButtonInterrupt() { buttonFlag_ = false; }
 void UIController::resetJoyButtonInterrupt() { joyButtonFlag_ = false; }
@@ -104,3 +119,7 @@ void joyButtonISR() {
 		UIController::instance->joyButtonInterrupt();
 	}
 }
+
+bool UIController::coinIsThere() { return digitalRead(kPinCoin_); }
+
+bool UIController::winIsThere() { return digitalRead(kPinWin_); }

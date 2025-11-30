@@ -1,46 +1,61 @@
 #include <Arduino.h>
+#include <Servo.h>
 
 #include "actuation.h"
-#include "sensing.h"
+
+Servo TiltServoX;
+Servo TiltServoY;
+Servo LiftServoNW;
+Servo LiftServoNE;
+Servo LiftServoSE;
+
+// const int kLiftCenter = 1450;
+// const int kLiftMin	  = 25;
+// const int kLiftMax	  = 500;
+
+const LiftServoState kLiftStop = LiftServoState(1470, 1460, 1470);
+const LiftServoState kLiftUp   = LiftServoState(1372, 1545, 1412);
+const LiftServoState kLiftDown = LiftServoState(1540, 1389, 1560);
 
 
-TiltController::TiltController(int XServoPin, int YServoPin) : PIN_X(XServoPin), PIN_Y(YServoPin) {
-	orig_.x	 = 0;
-	orig_.y	 = 0;
-	state_.x = 0;
-	state_.y = 0;
-	targ_.x	 = 0;
-	targ_.y	 = 0;
+TiltController::TiltController(int XServoPin, int YServoPin) : kPinX_(XServoPin), kPinY_(YServoPin) {
+	orig_  = TiltServoState(0, 0);
+	state_ = TiltServoState(0, 0);
+	targ_  = TiltServoState(0, 0);
+
+	center_ = TiltServoState(1500, 1500);
+	min_	= TiltServoState(1200, 1200);
+	max_	= TiltServoState(1800, 1800);
 }
 
 void TiltController::initPins() {
-	pinMode(PIN_X, OUTPUT);
-	pinMode(PIN_Y, OUTPUT);
+	TiltServoX.attach(kPinX_);
+	TiltServoY.attach(kPinY_);
 }
 
 int TiltController::tiltUpdate() {
-	analogWrite(PIN_X, state_.x);
-	analogWrite(PIN_Y, state_.y);
+	TiltServoX.writeMicroseconds(state_.x);
+	TiltServoY.writeMicroseconds(state_.y);
 }
 
-TiltServoState TiltController::getPosition() {
-	return state_;
-}
+TiltServoState TiltController::getPosition() { return state_; }
 
-void TiltController::setTraj(TiltServoState targ, int speed) {
-	if (speed == TILTSPEED_IMMEDIATE) {
+void TiltController::setTraj(TiltServoState targ, int type, int value) {
+	targ_ = targ;
+	orig_ = targ;
+
+	if ((type == TRAJ_SPEED && value == TILTSPEED_IMMEDIATE) || (type == TRAJ_DURATION && value == 0)) {
 		state_ = targ;
 		tiltUpdate();
-		targ_ = targ;
-		orig_ = targ;
 		return;
 	}
 
-	orig_ = state_;
-	targ_ = targ;
-
-	int dist = max(abs(orig_.x - targ_.x), abs(orig_.y - targ_.y));
-	duration = dist * speed;
+	if (type == TRAJ_SPEED) {
+		int dist = max(abs(orig_.x - targ_.x), abs(orig_.y - targ_.y));
+		duration = dist * value;
+	} else if (type == TRAJ_DURATION) {
+		duration = value;
+	}
 }
 
 int TiltController::updateTraj(time_t elapsed) {
@@ -53,13 +68,29 @@ int TiltController::updateTraj(time_t elapsed) {
 	return (state_.x == targ_.x && state_.y == targ_.y);
 }
 
-int TiltController::set(TiltServoState state_in) {
-	analogWrite(PIN_X, state_in.x);
-	analogWrite(PIN_Y, state_in.y);
+int TiltController::set(TiltServoState state) {
+	state_ = state;
+	tiltUpdate();
 }
 
-void TiltController::center(int speed) {
-	setTraj(TiltServoState(0, 0), speed);
+void TiltController::toCenter(int type, int value) { setTraj(center_, type, value); }
+
+void TiltController::updateCenter() { center_ = state_; }
+
+void TiltController::updateBounds() {
+	Serial.print("Center: ");
+	Serial.print(center_.x);
+	Serial.print(", ");
+	Serial.println(center_.y);
+	Serial.print("State: ");
+	Serial.print(state_.x);
+	Serial.print(", ");
+	Serial.println(state_.y);
+
+	min_.x = center_.x - abs(state_.x - center_.x);
+	min_.y = center_.y - abs(state_.y - center_.y);
+	max_.x = center_.x + abs(state_.x - center_.x);
+	max_.y = center_.y + abs(state_.y - center_.y);
 }
 
 
@@ -68,15 +99,15 @@ LiftController::LiftController(int NWServoPin, int NEServoPin, int SEServoPin)
 	: kPinNW_(NWServoPin), kPinNE_(NEServoPin), kPinSE_(SEServoPin) {}
 
 void LiftController::initPins() {
-	pinMode(kPinNW_, OUTPUT);
-	pinMode(kPinNE_, OUTPUT);
-	pinMode(kPinSE_, OUTPUT);
+	LiftServoNW.attach(kPinNW_);
+	LiftServoNE.attach(kPinNE_);
+	LiftServoSE.attach(kPinSE_);
 }
 
 void LiftController::update() {
-	analogWrite(kPinNW_, state_.nw);
-	analogWrite(kPinNE_, state_.ne);
-	analogWrite(kPinSE_, state_.se);
+	LiftServoNW.writeMicroseconds(state_.nw);
+	LiftServoNE.writeMicroseconds(state_.ne);
+	LiftServoSE.writeMicroseconds(state_.se);
 }
 
 void LiftController::set(LiftServoState state_in) {
@@ -84,19 +115,29 @@ void LiftController::set(LiftServoState state_in) {
 	update();
 }
 
-void LiftController::raise(int speed) {
-	if (!speed)
-		speed = lift_up_speed;
+void LiftController::write(int dir, LimitState limits) {
+	// int msNorm, msInv;
+	// msNorm = v + (v >= 0 ? kLiftMin : -kLiftMin);
 
-	state_ = LiftServoState(90 + speed, 90 + speed, 90 + speed);
+	// state_.nw = kLiftCenter + (msNorm * limits.nw);
+	// state_.ne = kLiftCenter - (msNorm * limits.ne);
+	// state_.se = kLiftCenter + (msNorm * limits.se);
+
+
+	if (dir == LIFT_DIR_UP) state_ = kLiftUp;
+	else if (dir == LIFT_DIR_STOP) state_ = kLiftStop;
+	else {
+		state_.nw = limits.nw ? kLiftStop.nw : kLiftDown.nw;
+		state_.ne = limits.ne ? kLiftStop.ne : kLiftDown.ne;
+		state_.se = limits.se ? kLiftStop.se : kLiftDown.se;
+	}
+
+	// Serial.print(state_.nw);
+	// Serial.print(", ");
+	// Serial.print(state_.ne);
+	// Serial.print(", ");
+	// Serial.println(state_.se);
 	update();
 }
 
-void LiftController::lower(LimitState limits, int speed) {
-	if (!speed)
-		speed = lift_down_speed;
-
-
-	state_ = LiftServoState(90 + (speed * limits.nw), 90 + (speed * limits.ne), 90 + (speed * limits.se));
-	update();
-}
+void LiftController::stop() { write(LIFT_DIR_STOP); }

@@ -5,6 +5,8 @@
 #define BARRIGHT 0x0F
 #define DOT		 0x01
 
+const unsigned long kDisplayInitTO = 50000;
+
 class DisplayController {
   public:
 	DisplayController(int, int, int);

@@ -4,7 +4,7 @@
 #include "state.h"
 
 
-const int displayInitTO = 50000;
+extern const unsigned long kDisplayInitTO;
 
 class IS;
 
@@ -34,60 +34,56 @@ class IS : public State {
 		parent_ = parent;
 	};
 
-  public:
+  protected:
 	InitState* parent_;
+	int		   loop_start_;
 };
 
 
-enum { INIT, TEST };
-enum { X, Y };
-
-class IS_Button : public IS {
-	void enter();
-};
 
 class IS_Disp : public IS {
   public:
-	IS_Disp(int test) : kTest_(test) {}
-	void enter();
-	void update();
+	void enter() override;
+	void update() override;
 
   private:
-	const int kTest_;
-	const int kLoopPeriod_ = displayInitTO;
-	int		  loop_start_;
+	const int kLoopPeriod_ = kDisplayInitTO;
 	int		  stage_;
 };
 
-class IS_JoyInit : public IS {
-	void enter();
+class IS_Joy : public IS {
+	void enter() override;
 };
-class IS_JoyTest : public IS {
+
+class IS_LiftUp : public IS {
+	void enter() override;
+	void update() override;
+};
+class IS_LiftDown : public IS {
+	void enter() override;
+	void update() override;
+	void exit() override;
+};
+
+class IS_TiltCenter : public IS {
   public:
-	void enter();
-	void update();
+	void update() override;
+	void enter() override;
+	void exit() override;
 
   private:
-	int testJoy(int);
+	unsigned long TO_start_;
+	bool		  TO_flag_;
+};
+class IS_TiltBounds : public IS {
+  public:
+	void update() override;
+	void enter() override;
+	void exit() override;
 
-	bool dir_;
-};
-
-class IS_LiftTest : public IS {
-	// void enter();
-	void update();
-};
-class IS_LiftInitUp : public IS {
-	void enter();
-	void update();
-};
-class IS_LiftInitDown : public IS {
-	void enter();
-	void update();
-};
-
-class IS_TiltInit : public IS {
-	void update();
+  private:
+	unsigned long TO_start_;
+	bool		  TO_flag_;
 };
 
 #endif
