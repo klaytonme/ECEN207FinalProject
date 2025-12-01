@@ -5,10 +5,10 @@
 
 const int tilt_max = 200;
 
-const int kLiftUpTime	= 2000000;
-const int kLiftMaxSpeed = 15;
+const unsigned long kLiftUpTime	  = 2000000;
+const int			kLiftMaxSpeed = 15;
 
-const int			tilt_speed_immediate_TO = 500000;
+const unsigned long tilt_speed_immediate_TO = 500000;
 const unsigned long kTiltInitTO				= 10000000;
 
 const int kTiltMin			= 570;
@@ -16,7 +16,7 @@ const int kTiltMax			= 2320;
 const int kServoRefreshRate = 50000;
 
 
-typedef struct TiltServoState {
+struct TiltServoState {
 	int x;
 	int y;
 	TiltServoState() {
@@ -37,7 +37,7 @@ class TiltController {
 	TiltServoState orig_;
 	TiltServoState state_;
 	TiltServoState targ_;
-	time_t		   duration;
+	unsigned long  duration;
 
 	TiltServoState center_;
 	TiltServoState min_;
@@ -46,10 +46,10 @@ class TiltController {
 	const int kPinX_;
 	const int kPinY_;
 
-	int tiltUpdate();
+	void tiltUpdate();
 
   public:
-	TiltController(int, int);
+	TiltController(const uint8_t*);
 
 	void		   initPins(void);
 	TiltServoState getPosition(void);
@@ -63,8 +63,8 @@ class TiltController {
 	TiltServoState getMax(void) { return max_; }
 
 	void setTraj(TiltServoState, int = TRAJ_SPEED, int = TILTSPEED_IMMEDIATE);
-	int	 updateTraj(time_t);
-	int	 set(TiltServoState);
+	int	 updateTraj(unsigned long);
+	void set(TiltServoState);
 
 	const int kInitListLength = 6;
 };
@@ -73,7 +73,7 @@ class TiltController {
 
 enum { LIFT_DIR_DOWN = -1, LIFT_DIR_STOP = 0, LIFT_DIR_UP = 1 };
 
-typedef struct LiftServoState {
+struct LiftServoState {
 	int nw;
 	int ne;
 	int se;
@@ -99,7 +99,7 @@ class LiftController {
 	void update();
 
   public:
-	LiftController(int, int, int);
+	LiftController(const uint8_t*);
 	void initPins(void);
 	void set(LiftServoState);
 	void write(int = LIFT_DIR_UP, LimitState = LimitState(false, false, false));

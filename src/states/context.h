@@ -14,7 +14,7 @@ class Context {
 
 
   public:
-	Context(State*, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
+	Context(State*, const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*, const uint8_t*);
 	~Context() = default;
 
 	void		  transitionTo(State*);

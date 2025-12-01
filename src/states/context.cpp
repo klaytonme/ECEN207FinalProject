@@ -6,21 +6,25 @@
 #include "sensing.h"
 #include "state.h"
 
-Context::Context(State* state, int XServoPin, int YServoPin, int NWServoPin, int NEServoPin, int SEServoPin,
-				 int NWLimitPin, int NELimitPin, int SELimitPin, int ButtonPin, int JoyXPin, int JoyYPin,
-				 int JoyButtonPin, int CoinPin, int WinPin, int DispLatchPin, int DispClockPin, int DispDataPin) {
+Context::Context(State* state, const uint8_t* DisplaySegmentPins, const uint8_t* DisplayDigitPins,
+				 const uint8_t* LiftServoPins, const uint8_t* TiltServoPins, const uint8_t* LimitSwitchPins,
+				 const uint8_t* UIPins)
+	: state_(nullptr) {
 
-	Tilt_  = new TiltController(XServoPin, YServoPin);
-	Lift_  = new LiftController(NWServoPin, NEServoPin, SEServoPin);
-	Limit_ = new LimitController(NWLimitPin, NELimitPin, SELimitPin);
-	UI_	   = new UIController(ButtonPin, JoyXPin, JoyYPin, JoyButtonPin, CoinPin, WinPin);
-	Disp_  = new DisplayController(DispLatchPin, DispClockPin, DispDataPin);
+	Tilt_  = new TiltController(TiltServoPins);
+	Lift_  = new LiftController(LiftServoPins);
+	Limit_ = new LimitController(LimitSwitchPins);
+	UI_	   = new UIController(UIPins);
+	Disp_  = new DisplayController(DisplaySegmentPins, DisplayDigitPins);
+
+	Serial.println("Initializing objects and configuring pins");
 
 	Tilt_->initPins();
 	Lift_->initPins();
 	Limit_->initPins();
 	UI_->initPins();
 	Disp_->initPins();
+
 
 	current_time_ = micros();
 	transitionTo(state);
@@ -42,6 +46,7 @@ void Context::transitionTo(State* state) {
 void Context::update() {
 	current_time_ = micros();
 	state_->update();
+	Disp_->update(current_time_);
 }
 
 unsigned long Context::t() { return current_time_; }

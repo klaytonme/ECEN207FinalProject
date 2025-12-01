@@ -4,27 +4,12 @@
 #include "states/StateInit.h"
 #include "states/context.h"
 
-
-#define LIFTSERVONWPIN 8
-#define LIFTSERVONEPIN 9
-#define LIFTSERVOSEPIN 10
-#define TILTSERVOXPIN  5
-#define TILTSERVOYPIN  6
-
-#define LIMITSWITCHNWPIN  A0
-#define LIMITSWITCHNEPIN  A1
-#define LIMITSWITCHSEPIN  A2
-#define BUTTONPIN		  2
-#define JOYSTICKBUTTONPIN 3
-#define JOYSTICKXPIN	  A3
-#define JOYSTICKYPIN	  A4
-#define COININTERRUPTPIN  12
-#define WININTERRUPTPIN	  13
-
-#define DISPLAYLATCHPIN 0
-#define DISPLAYCLOCKPIN 1
-#define DISPLAYDATAPIN	4
-
+const uint8_t DisplaySegmentPins[] = {40, 38, 36, 34, 32, 30, 28, 26}; // a=t, b=tr, c=br, d=b, e=bl, f=tl, g=c, h=dot
+const uint8_t DisplayDigitPins[]   = {53, 51, 49, 47};				   // D1, D2, D3, D4
+const uint8_t LiftServoPins[]	   = {1, 2, 3};						   // NW, NE, SE
+const uint8_t TiltServoPins[]	   = {4, 5};						   // X, Y
+const uint8_t LimitSwitchPins[]	   = {6, 7, 8};						   // NW, NE, SE
+const uint8_t UIPins[]			   = {9, 10, A0, A1, 11, 12};		   // Button, Joy Button, X in, Y in, Coin, Win
 
 Context* ctx;
 
@@ -33,12 +18,11 @@ Context* ctx;
 
 void setup() {
 	Serial.begin(9600);
-	Serial.println("Ran!");
+	delay(500);
+	Serial.println("Serial Setup on 9600");
 
-	ctx = new Context(new InitState(), TILTSERVOXPIN, TILTSERVOYPIN, LIFTSERVONWPIN, LIFTSERVONEPIN, LIFTSERVOSEPIN,
-					  LIMITSWITCHNWPIN, LIMITSWITCHNEPIN, LIMITSWITCHSEPIN, BUTTONPIN, JOYSTICKXPIN, JOYSTICKYPIN,
-					  JOYSTICKBUTTONPIN, COININTERRUPTPIN, WININTERRUPTPIN, DISPLAYLATCHPIN, DISPLAYCLOCKPIN,
-					  DISPLAYDATAPIN);
+	ctx = new Context(new InitState(), DisplaySegmentPins, DisplayDigitPins, LiftServoPins, TiltServoPins,
+					  LimitSwitchPins, UIPins);
 }
 
 void loop() { ctx->update(); }

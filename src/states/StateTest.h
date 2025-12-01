@@ -10,6 +10,8 @@ class TS;
 
 class TestState : public State {
   public:
+	TestState() : substate_(nullptr) {}
+
 	void enter() override;
 	void update() override;
 	void exit() override;
@@ -35,8 +37,8 @@ class TS : public State {
 	};
 
   protected:
-	TestState* parent_;
-	int		   loop_start_;
+	TestState*	  parent_;
+	unsigned long loop_start_;
 };
 
 
@@ -46,8 +48,8 @@ class TS_Disp : public TS {
 	void update() override;
 
   private:
-	const int kLoopPeriod_ = kDisplayInitTO;
-	int		  stage_;
+	const unsigned long kLoopPeriod_ = kDisplayInitTO;
+	int					stage_;
 };
 
 class TS_Coin : public TS {
@@ -66,7 +68,7 @@ class TS_Joy : public TS {
 	void update() override;
 
   private:
-	int testJoy(int);
+	const char* testJoy(int);
 
 	bool dir_;
 };

@@ -10,6 +10,8 @@ class IS;
 
 class InitState : public State {
   public:
+	InitState() : substate_(nullptr) {}
+
 	void enter() override;
 	void update() override;
 	void exit() override;
@@ -35,8 +37,8 @@ class IS : public State {
 	};
 
   protected:
-	InitState* parent_;
-	int		   loop_start_;
+	InitState*	  parent_;
+	unsigned long loop_start_;
 };
 
 
@@ -47,8 +49,8 @@ class IS_Disp : public IS {
 	void update() override;
 
   private:
-	const int kLoopPeriod_ = kDisplayInitTO;
-	int		  stage_;
+	const unsigned long kLoopPeriod_ = kDisplayInitTO;
+	int					stage_;
 };
 
 class IS_Joy : public IS {

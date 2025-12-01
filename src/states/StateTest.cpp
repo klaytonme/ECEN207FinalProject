@@ -47,7 +47,7 @@ void TS_Disp::enter() {
 void TS_Disp::update() {
 	if (t() > loop_start_ + kLoopPeriod_) {
 		loop_start_ = t();
-		ctx_->Disp_->writeDisplay(1 << stage_);
+		ctx_->Disp_->write(1 << stage_, t());
 		Serial.println(stage_);
 		stage_++;
 	}
@@ -62,8 +62,8 @@ void TS_Coin::enter() {
 void TS_Coin::update() {
 	if (ctx_->UI_->buttonWasPressed()) parent_->transitionTo(new TS_Win());
 
-	if (ctx_->UI_->coinIsThere()) ctx_->Disp_->writeDisplay(0xFFFFFFFF);
-	else ctx_->Disp_->writeDisplay(0x00000000);
+	if (ctx_->UI_->coinIsThere()) ctx_->Disp_->write(0xFFFFFFFF, t());
+	else ctx_->Disp_->write(0, t());
 }
 
 void TS_Win::enter() {
@@ -73,8 +73,8 @@ void TS_Win::enter() {
 void TS_Win::update() {
 	if (ctx_->UI_->buttonWasPressed()) parent_->transitionTo(new TS_Joy());
 
-	if (ctx_->UI_->winIsThere()) ctx_->Disp_->writeDisplay(0xFFFFFFFF);
-	else ctx_->Disp_->writeDisplay(0x00000000);
+	if (ctx_->UI_->winIsThere()) ctx_->Disp_->write(0xFFFFFFFF, t());
+	else ctx_->Disp_->write(0x00000000, t());
 }
 
 void TS_Joy::enter() {
@@ -99,19 +99,18 @@ void TS_Joy::update() {
 	JoyState state	  = ctx_->UI_->readJoy();
 	int		 joyValue = dir_ == X ? state.x : state.y;
 
-	int displayVal = testJoy(joyValue);
-	ctx_->Disp_->writeDisplay(displayVal);
+	ctx_->Disp_->write(testJoy(joyValue), t());
 }
-int TS_Joy::testJoy(int joyValue) {
-	if (joyValue < -(7 * kJoyMax) / 9) return BARLEFT << (8 * 3);
-	if (joyValue < -(5 * kJoyMax) / 9) return BARRIGHT << (8 * 3);
-	if (joyValue < -(3 * kJoyMax) / 9) return BARLEFT << (8 * 2);
-	if (joyValue < -(1 * kJoyMax) / 9) return BARRIGHT << (8 * 2);
-	if (joyValue < (1 * kJoyMax) / 9) return DOT << (8 * 2);
-	if (joyValue < (3 * kJoyMax) / 9) return BARLEFT << (8 * 1);
-	if (joyValue < (5 * kJoyMax) / 9) return BARRIGHT << (8 * 1);
-	if (joyValue < (7 * kJoyMax) / 9) return BARLEFT << (8 * 0);
-	else return BARRIGHT << (8 * 0);
+const char* TS_Joy::testJoy(int joyValue) {
+	if (joyValue < -(7 * kJoyMax) / 9) return "|   ";
+	if (joyValue < -(5 * kJoyMax) / 9) return "1   ";
+	if (joyValue < -(3 * kJoyMax) / 9) return " |  ";
+	if (joyValue < -(1 * kJoyMax) / 9) return " 1  ";
+	if (joyValue < (1 * kJoyMax) / 9) return " .  ";
+	if (joyValue < (3 * kJoyMax) / 9) return "  | ";
+	if (joyValue < (5 * kJoyMax) / 9) return "  1 ";
+	if (joyValue < (7 * kJoyMax) / 9) return "   |";
+	return "   1";
 }
 
 

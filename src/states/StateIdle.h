@@ -9,6 +9,10 @@ class IdleState : public State {
 	void enter() override;
 	void update() override;
 	void exit() override;
+
+  private:
+	int randomState;
+	int randomTransitionTime;
 };
 
 

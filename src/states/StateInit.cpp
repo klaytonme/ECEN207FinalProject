@@ -49,8 +49,8 @@ void IS_Disp::update() {
 
 	if (t() > loop_start_ + kLoopPeriod_) {
 		loop_start_ = t();
-		ctx_->Disp_->writeDisplay(1 << stage_);
 		stage_++;
+		ctx_->Disp_->write(uint32_t(1) << stage_, t());
 	}
 
 	if (stage_ >= 32) {

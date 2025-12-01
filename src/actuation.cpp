@@ -18,7 +18,7 @@ const LiftServoState kLiftUp   = LiftServoState(1372, 1545, 1412);
 const LiftServoState kLiftDown = LiftServoState(1540, 1389, 1560);
 
 
-TiltController::TiltController(int XServoPin, int YServoPin) : kPinX_(XServoPin), kPinY_(YServoPin) {
+TiltController::TiltController(const uint8_t* pins) : kPinX_(pins[0]), kPinY_(pins[1]) {
 	orig_  = TiltServoState(0, 0);
 	state_ = TiltServoState(0, 0);
 	targ_  = TiltServoState(0, 0);
@@ -33,7 +33,7 @@ void TiltController::initPins() {
 	TiltServoY.attach(kPinY_);
 }
 
-int TiltController::tiltUpdate() {
+void TiltController::tiltUpdate() {
 	TiltServoX.writeMicroseconds(state_.x);
 	TiltServoY.writeMicroseconds(state_.y);
 }
@@ -58,7 +58,7 @@ void TiltController::setTraj(TiltServoState targ, int type, int value) {
 	}
 }
 
-int TiltController::updateTraj(time_t elapsed) {
+int TiltController::updateTraj(unsigned long elapsed) {
 
 	state_.x = constrain(map(elapsed, 0, duration, orig_.x, targ_.x), min(orig_.x, targ_.x), max(orig_.x, targ_.x));
 	state_.y = constrain(map(elapsed, 0, duration, orig_.y, targ_.y), min(orig_.y, targ_.y), max(orig_.y, targ_.y));
@@ -68,7 +68,7 @@ int TiltController::updateTraj(time_t elapsed) {
 	return (state_.x == targ_.x && state_.y == targ_.y);
 }
 
-int TiltController::set(TiltServoState state) {
+void TiltController::set(TiltServoState state) {
 	state_ = state;
 	tiltUpdate();
 }
@@ -95,8 +95,7 @@ void TiltController::updateBounds() {
 
 
 
-LiftController::LiftController(int NWServoPin, int NEServoPin, int SEServoPin)
-	: kPinNW_(NWServoPin), kPinNE_(NEServoPin), kPinSE_(SEServoPin) {}
+LiftController::LiftController(const uint8_t* pins) : kPinNW_(pins[0]), kPinNE_(pins[1]), kPinSE_(pins[2]) {}
 
 void LiftController::initPins() {
 	LiftServoNW.attach(kPinNW_);

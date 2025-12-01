@@ -5,7 +5,7 @@
 const int kJoyMax = 512;
 
 
-typedef struct LimitState {
+struct LimitState {
 	bool nw;
 	bool ne;
 	bool se;
@@ -21,7 +21,7 @@ typedef struct LimitState {
 	};
 };
 
-typedef struct JoyState {
+struct JoyState {
 	int x;
 	int y;
 	JoyState() {
@@ -38,7 +38,7 @@ typedef struct JoyState {
 
 class LimitController {
   public:
-	LimitController(int, int, int);
+	LimitController(const uint8_t*);
 	void	   initPins(void);
 	LimitState readLimits(void);
 	bool	   isDown(void);
@@ -53,7 +53,7 @@ class LimitController {
 
 class UIController {
   public:
-	UIController(int, int, int, int, int, int);
+	UIController(const uint8_t*);
 
 	void initPins(void);
 	void joyCalib(void);
@@ -83,7 +83,7 @@ class UIController {
 	const int kPinCoin_;
 	const int kPinWin_;
 
-	const int kButtonInterruptTO_ = 500000;
+	const unsigned long kButtonInterruptTO_ = 500000;
 
 
 	volatile bool		   buttonFlag_;
